@@ -261,7 +261,7 @@
 		2192BC971614FF8200082926 /* UIImageView+AFNetworking.m in Sources */ = {isa = PBXBuildFile; fileRef = 2192BC8E1614FF8200082926 /* UIImageView+AFNetworking.m */; };
 		2192BCFF16161F0700082926 /* JAPIRequestOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2192BCFE16161F0700082926 /* JAPIRequestOperation.m */; };
 		21AD975316163A98009A977D /* my_response.json in Resources */ = {isa = PBXBuildFile; fileRef = 21AD975216163A98009A977D /* my_response.json */; };
-		21AD975A161BB4B2009A977D /* NSData+JiveBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 21AD9759161BB4B2009A977D /* NSData+JiveBase64.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		21AD975A161BB4B2009A977D /* NSData+JiveBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 21AD9759161BB4B2009A977D /* NSData+JiveBase64.m */; };
 		21AD9767161CAD32009A977D /* MockJiveURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 21AD9766161CAD32009A977D /* MockJiveURLProtocol.m */; };
 		21AD976A161CB284009A977D /* jive_api_tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 21AD9769161CB284009A977D /* jive_api_tests.m */; };
 		21AD976D161CBA90009A977D /* JiveAPITestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 21AD976C161CBA90009A977D /* JiveAPITestCase.m */; };

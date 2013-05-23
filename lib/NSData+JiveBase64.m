@@ -308,14 +308,10 @@ char *JiveNewBase64Encode(
 	
     if (outputBuffer)
     {
-        NSString *result =
-            [[[NSString alloc]
-                initWithBytes:outputBuffer
-                length:outputLength
-                encoding:NSASCIIStringEncoding]
-            autorelease];
-        free(outputBuffer);
-        return result;
+        return [[NSString alloc] initWithBytesNoCopy:outputBuffer
+                                              length:outputLength
+                                            encoding:NSASCIIStringEncoding
+                                        freeWhenDone:YES];
     } else {
         return nil;
     }
