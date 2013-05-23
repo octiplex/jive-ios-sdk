@@ -26,6 +26,10 @@
 #import "JiveNSDictionary+URLArguments.h"
 #import "NSDateFormatter+JiveISO8601DateFormatter.h"
 #import "NSData+JiveBase64.h"
+#import "AFImageRequestOperation.h"
+#import "AFNetworkActivityIndicatorManager.h"
+
+#import <MobileCoreServices/MobileCoreServices.h>
 
 @interface JiveInvite (internal)
 
