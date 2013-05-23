@@ -29,7 +29,11 @@
 #import "AFImageRequestOperation.h"
 #import "AFNetworkActivityIndicatorManager.h"
 
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
 #import <MobileCoreServices/MobileCoreServices.h>
+#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+#import <CoreServices/CoreServices.h>
+#endif
 
 @interface JiveInvite (internal)
 
@@ -118,7 +122,9 @@
         _jiveInstance = jiveInstanceURL;
         _delegate = delegate;
     }
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
     [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
+#endif
     return self;
 }
 
@@ -736,14 +742,14 @@
     [[self blogOperation:person withOptions:options onComplete:complete onError:errorBlock] start];
 }
 
-- (NSOperation *) avatarForPersonOperation:(JivePerson *)person onComplete:(void (^)(UIImage *avatarImage))complete onError:(JiveErrorBlock)errorBlock {
+- (NSOperation *) avatarForPersonOperation:(JivePerson *)person onComplete:(void (^)(JiveNativeImage *avatarImage))complete onError:(JiveErrorBlock)errorBlock {
     JiveResourceEntry *resourceEntry = [person.resources objectForKey:@"avatar"];
     NSMutableURLRequest *mutableURLRequest = [self requestWithOptions:nil andTemplate:[resourceEntry.ref path], nil];
-    void (^heapCompleteBlock)(UIImage *) = [complete copy];
+    void (^heapCompleteBlock)(JiveNativeImage *) = [complete copy];
     void (^heapErrorBlock)(NSError *) = [errorBlock copy];
     AFImageRequestOperation *operation = [AFImageRequestOperation imageRequestOperationWithRequest:mutableURLRequest
                                                                               imageProcessingBlock:NULL
-                                                                                           success:(^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+                                                                                           success:(^(NSURLRequest *request, NSHTTPURLResponse *response, JiveNativeImage *image) {
         if (heapCompleteBlock) {
             heapCompleteBlock(image);
         }
@@ -756,7 +762,7 @@
     return operation;
 }
 
-- (void) avatarForPerson:(JivePerson *)person onComplete:(void (^)(UIImage *))complete onError:(JiveErrorBlock)error {
+- (void) avatarForPerson:(JivePerson *)person onComplete:(void (^)(JiveNativeImage *))complete onError:(JiveErrorBlock)error {
     [[self avatarForPersonOperation:person onComplete:complete onError:error] start];
 }
 
@@ -1193,7 +1199,7 @@
     [request setHTTPBody:body];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%ti", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self entityOperationForClass:[JiveContent class]
                                  request:request
                               onComplete:complete
@@ -1414,7 +1420,7 @@
     [operation start];
 }
 
-- (void) avatarForPlace:(JivePlace *)place options:(JiveDefinedSizeRequestOptions *)options onComplete:(void (^)(UIImage *avatarImage))completeBlock onError:(JiveErrorBlock)errorBlock {
+- (void) avatarForPlace:(JivePlace *)place options:(JiveDefinedSizeRequestOptions *)options onComplete:(void (^)(JiveNativeImage *avatarImage))completeBlock onError:(JiveErrorBlock)errorBlock {
     NSOperation *operation = [self avatarOperationForPlace:place
                                                    options:options
                                                 onComplete:completeBlock
@@ -1457,14 +1463,14 @@
                                    onError:errorBlock];
 }
 
-- (NSOperation *) avatarOperationForPlace:(JivePlace *)place options:(JiveDefinedSizeRequestOptions *)options onComplete:(void (^)(UIImage *avatarImage))completeBlock onError:(JiveErrorBlock)errorBlock {
+- (NSOperation *) avatarOperationForPlace:(JivePlace *)place options:(JiveDefinedSizeRequestOptions *)options onComplete:(void (^)(JiveNativeImage *avatarImage))completeBlock onError:(JiveErrorBlock)errorBlock {
     JiveResourceEntry *resourceEntry = [place.resources objectForKey:@"avatar"];
     NSMutableURLRequest *mutableURLRequest = [self requestWithOptions:options andTemplate:[resourceEntry.ref path], nil];
-    void (^heapCompleteBlock)(UIImage *) = [completeBlock copy];
+    void (^heapCompleteBlock)(JiveNativeImage *) = [completeBlock copy];
     void (^heapErrorBlock)(NSError *) = [errorBlock copy];
     AFImageRequestOperation *operation = [AFImageRequestOperation imageRequestOperationWithRequest:mutableURLRequest
                                                                               imageProcessingBlock:NULL
-                                                                                           success:(^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+                                                                                           success:(^(NSURLRequest *request, NSHTTPURLResponse *response, JiveNativeImage *image) {
         if (heapCompleteBlock) {
             heapCompleteBlock(image);
         }
@@ -1767,7 +1773,7 @@
     [request setHTTPBody:body];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%ti", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self emptyOperationWithRequest:request onComplete:complete onError:error];
 }
 
@@ -1812,7 +1818,7 @@
     [request setHTTPMethod:@"PUT"];
     [request setHTTPBody:body];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%ti", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self entityOperationForClass:[JiveInvite class]
                                  request:request
                               onComplete:complete
@@ -1832,7 +1838,7 @@
     [request setHTTPMethod:@"POST"];
     [request setHTTPBody:body];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%ti", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self listOperationForClass:[JiveInvite class]
                                request:request
                             onComplete:complete
@@ -1860,7 +1866,7 @@
     [[self imagesOperationFromURL:imagesURL onComplete:completeBlock onError:errorBlock] start];
 }
 
-- (NSOperation*) uploadImageOperation:(UIImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
+- (NSOperation*) uploadImageOperation:(JiveNativeImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
     
     NSMutableURLRequest* request = [self requestWithImageAsPNGBody:image options:nil andTemplate:@"api/core/v3/images", nil];
     
@@ -1882,7 +1888,7 @@
     return op;
 }
 
-- (void) uploadImage:(UIImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
+- (void) uploadImage:(JiveNativeImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
     [[self uploadImageOperation:image onComplete:complete onError:errorBlock] start];
 }
 
@@ -1997,12 +2003,12 @@
     
     [request setHTTPBody:body];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%ti", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return request;
 }
 
 // This is a stop-gap until AFNetworking's multi-part support is fixed.
-- (NSMutableURLRequest *) requestWithImageAsPNGBody:(UIImage*) image options:(NSObject<JiveRequestOptions>*)options andTemplate:(NSString*)template, ... NS_REQUIRES_NIL_TERMINATION {
+- (NSMutableURLRequest *) requestWithImageAsPNGBody:(JiveNativeImage*) image options:(NSObject<JiveRequestOptions>*)options andTemplate:(NSString*)template, ... NS_REQUIRES_NIL_TERMINATION {
     
     va_list args;
     va_start(args, template);
@@ -2018,7 +2024,16 @@
     
     NSMutableData *body = [NSMutableData data];
     
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
     NSData *imageData = UIImagePNGRepresentation(image);
+#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+    NSBitmapImageRep *representation = image.representations.count ? image.representations[0] : nil;
+    if ( ! [representation isKindOfClass:[NSBitmapImageRep class]] ) {
+        representation = [NSBitmapImageRep imageRepWithData:image.TIFFRepresentation];
+    }
+    NSData *imageData = [representation representationUsingType:NSPNGFileType properties:@{}];
+#endif
+    
     if (imageData) {
         [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
         [body appendData:[@"Content-Disposition: form-data; name=\"image\"; filename=\"image.png\"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
