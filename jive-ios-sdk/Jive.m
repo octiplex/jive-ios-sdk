@@ -31,6 +31,12 @@
 #import "JiveRetryingImageRequestOperation.h"
 #import "JiveMetadata_internal.h"
 
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
+#import <UIKit/UIKit.h>
+#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+#import <Cocoa/Cocoa.h>
+#endif
+
 typedef NS_ENUM(NSInteger, JVPushRegistrationFeatureFlag) {
     JVPushRegistrationFeatureFlagPush = 0x01,
     JVPushRegistrationFeatureFlagAnnouncement = 0x02,
@@ -126,7 +132,9 @@ int const JivePushDeviceType = 3;
         _jiveInstance = jiveInstanceURL;
         self.delegate = delegate;
     }
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
     [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
+#endif
     return self;
 }
 
@@ -155,7 +163,7 @@ int const JivePushDeviceType = 3;
 - (AFJSONRequestOperation<JiveRetryingOperation> *)registerDeviceForJivePushNotifications:(NSString *)deviceToken onComplete:(JiveCompletedBlock)completeBlock onError:(JiveErrorBlock)errorBlock {
     NSMutableURLRequest *request = [self requestWithOptions:nil
                                                 andTemplate:@"api/core/mobile/v1/pushNotification/register", nil];
-    NSString *postString = [NSString stringWithFormat:@"deviceToken=%@&deviceType=%i&activated=true&featureFlags=%i", deviceToken, JivePushDeviceType, JVPushRegistrationFeatureFlagPush | JVPushRegistrationFeatureFlagVideo];
+    NSString *postString = [NSString stringWithFormat:@"deviceToken=%@&deviceType=%i&activated=true&featureFlags=%ti", deviceToken, JivePushDeviceType, JVPushRegistrationFeatureFlagPush | JVPushRegistrationFeatureFlagVideo];
     NSData *data = [postString dataUsingEncoding:NSUTF8StringEncoding];
     [request setHTTPBody:data];
     [request setHTTPMethod:@"POST"];
@@ -318,8 +326,8 @@ int const JivePushDeviceType = 3;
                                                                 onComplete:(JiveImageCompleteBlock)completeBlock
                                                                    onError:(JiveErrorBlock)errorBlock {
     NSMutableURLRequest *mutableURLRequest = [self requestWithOptions:options andTemplate:path, nil];
-    void (^heapCompleteBlock)(UIImage *) = [completeBlock copy];
-    void (^heapErrorBlock)(NSError *) = [errorBlock copy];
+    JiveImageCompleteBlock heapCompleteBlock = [completeBlock copy];
+    JiveErrorBlock heapErrorBlock = [errorBlock copy];
     AFImageRequestOperation<JiveRetryingOperation> *avatarOperation = [[JiveRetryingImageRequestOperation alloc] initWithRequest:mutableURLRequest];
     [avatarOperation setCompletionBlockWithSuccess:(^(AFHTTPRequestOperation *operation, id image) {
         if (heapCompleteBlock) {
@@ -810,7 +818,7 @@ int const JivePushDeviceType = 3;
                                onError:errorBlock];
 }
 
-- (void) avatarForPerson:(JivePerson *)person onComplete:(void (^)(UIImage *))complete onError:(JiveErrorBlock)error {
+- (void) avatarForPerson:(JivePerson *)person onComplete:(JiveImageCompleteBlock)complete onError:(JiveErrorBlock)error {
     [[self avatarForPersonOperation:person onComplete:complete onError:error] start];
 }
 
@@ -1275,7 +1283,7 @@ int const JivePushDeviceType = 3;
     [request setHTTPBody:body];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%tu", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self entityOperationForClass:[JiveContent class]
                                  request:request
                               onComplete:complete
@@ -1418,7 +1426,7 @@ int const JivePushDeviceType = 3;
     [request setHTTPBody:body];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%tu", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self entityOperationForClass:[JiveContent class]
                                  request:request
                               onComplete:completeBlock
@@ -1567,7 +1575,7 @@ int const JivePushDeviceType = 3;
     [operation start];
 }
 
-- (void) avatarForPlace:(JivePlace *)place options:(JiveDefinedSizeRequestOptions *)options onComplete:(void (^)(UIImage *avatarImage))completeBlock onError:(JiveErrorBlock)errorBlock {
+- (void) avatarForPlace:(JivePlace *)place options:(JiveDefinedSizeRequestOptions *)options onComplete:(JiveImageCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock {
     [[self avatarOperationForPlace:place
                            options:options
                         onComplete:completeBlock
@@ -1899,7 +1907,7 @@ int const JivePushDeviceType = 3;
     [request setHTTPBody:body];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%tu", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self emptyOperationWithRequest:request onComplete:complete onError:error];
 }
 
@@ -1941,7 +1949,7 @@ int const JivePushDeviceType = 3;
     [request setHTTPMethod:@"PUT"];
     [request setHTTPBody:body];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%tu", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self entityOperationForClass:[JiveInvite class]
                                  request:request
                               onComplete:complete
@@ -1960,7 +1968,7 @@ int const JivePushDeviceType = 3;
     [request setHTTPMethod:@"POST"];
     [request setHTTPBody:body];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%tu", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return [self listOperationForClass:[JiveInvite class]
                                request:request
                             onComplete:complete
@@ -1990,21 +1998,37 @@ int const JivePushDeviceType = 3;
     [[self imagesOperationFromURL:imagesURL onComplete:completeBlock onError:errorBlock] start];
 }
 
-- (AFHTTPRequestOperation<JiveRetryingOperation> *) uploadImageOperation:(UIImage *) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
+- (AFHTTPRequestOperation<JiveRetryingOperation> *) uploadImageOperation:(JiveNativeImage *) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
     return [self uploadJPEGImageOperation:image onComplete:complete onError:errorBlock];
 }
 
-- (AFHTTPRequestOperation<JiveRetryingOperation> *)uploadJPEGImageOperation:(UIImage *)image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
+- (AFHTTPRequestOperation<JiveRetryingOperation> *)uploadJPEGImageOperation:(JiveNativeImage *)image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
     NSString *mimeType = @"image/jpeg";
     NSString *fileName = @"image.jpeg";
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
     NSData *imageData = UIImageJPEGRepresentation(image, 1.0f);
+#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+    NSBitmapImageRep *representation = image.representations.count ? image.representations[0] : nil;
+    if ( ! [representation isKindOfClass:[NSBitmapImageRep class]] ) {
+        representation = [NSBitmapImageRep imageRepWithData:image.TIFFRepresentation];
+    }
+    NSData *imageData = [representation representationUsingType:NSJPEGFileType properties:@{NSImageCompressionFactor: @1}];
+#endif
     return [self uploadImageDataOperation:imageData mimeType:mimeType fileName:fileName onComplete:complete onError:errorBlock];
 }
 
-- (AFHTTPRequestOperation<JiveRetryingOperation> *)uploadPNGImageOperation:(UIImage *)image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
+- (AFHTTPRequestOperation<JiveRetryingOperation> *)uploadPNGImageOperation:(JiveNativeImage *)image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
     NSString *mimeType = @"image/png";
     NSString *fileName = @"image.png";
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
     NSData *imageData = UIImagePNGRepresentation(image);
+#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+    NSBitmapImageRep *representation = image.representations.count ? image.representations[0] : nil;
+    if ( ! [representation isKindOfClass:[NSBitmapImageRep class]] ) {
+        representation = [NSBitmapImageRep imageRepWithData:image.TIFFRepresentation];
+    }
+    NSData *imageData = [representation representationUsingType:NSPNGFileType properties:@{}];
+#endif
     return [self uploadImageDataOperation:imageData mimeType:mimeType fileName:fileName onComplete:complete onError:errorBlock];
 }
 
@@ -2041,11 +2065,11 @@ int const JivePushDeviceType = 3;
     }
 }
 
-- (AFImageRequestOperation<JiveRetryingOperation> *)imageRequestOperationWithMutableURLRequest:(NSMutableURLRequest *)imageMutableURLRequest onComplete:(void (^)(UIImage *))complete onError:(JiveErrorBlock)errorBlock {
+- (AFImageRequestOperation<JiveRetryingOperation> *)imageRequestOperationWithMutableURLRequest:(NSMutableURLRequest *)imageMutableURLRequest onComplete:(JiveImageCompleteBlock)complete onError:(JiveErrorBlock)errorBlock {
     [self maybeApplyCredentialsToMutableURLRequest:imageMutableURLRequest
                                             forURL:[imageMutableURLRequest URL]];
     JiveRetryingImageRequestOperation *retryingImageRequestOperation = [[JiveRetryingImageRequestOperation alloc] initWithRequest:imageMutableURLRequest];
-    [retryingImageRequestOperation setCompletionBlockWithSuccess:(^(AFHTTPRequestOperation *operation, UIImage *responseImage) {
+    [retryingImageRequestOperation setCompletionBlockWithSuccess:(^(AFHTTPRequestOperation *operation, id responseImage) {
         if (complete) {
             complete(responseImage);
         }
@@ -2059,15 +2083,15 @@ int const JivePushDeviceType = 3;
     return retryingImageRequestOperation;
 }
 
-- (void) uploadImage:(UIImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
+- (void) uploadImage:(JiveNativeImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock {
     [[self uploadImageOperation:image onComplete:complete onError:errorBlock] start];
 }
 
-- (void)uploadJPEGImage:(UIImage *)image onComplete:(void (^)(JiveImage *))complete onError:(JiveErrorBlock) errorBlock {
+- (void)uploadJPEGImage:(JiveNativeImage *)image onComplete:(void (^)(JiveImage *))complete onError:(JiveErrorBlock) errorBlock {
     [[self uploadJPEGImageOperation:image onComplete:complete onError:errorBlock] start];
 }
 
-- (void)uploadPNGImage:(UIImage *)image onComplete:(void (^)(JiveImage *))complete onError:(JiveErrorBlock) errorBlock {
+- (void)uploadPNGImage:(JiveNativeImage *)image onComplete:(void (^)(JiveImage *))complete onError:(JiveErrorBlock) errorBlock {
     [[self uploadPNGImageOperation:image onComplete:complete onError:errorBlock] start];
 }
 
@@ -2151,7 +2175,7 @@ int const JivePushDeviceType = 3;
     void (^processPropsBlock)(NSArray* properties) = ^(NSArray* properties) {
         NSArray* relevantProps = [properties filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name == %@", propertyName]];
         
-        NSAssert([relevantProps count] < 2, @"Expected one or zero properties for %@, but we got %i", propertyName, [relevantProps count]);
+        NSAssert([relevantProps count] < 2, @"Expected one or zero properties for %@, but we got %tu", propertyName, [relevantProps count]);
         
         if ([relevantProps count] == 1) {
             complete([relevantProps objectAtIndex:0]);
@@ -2212,7 +2236,7 @@ int const JivePushDeviceType = 3;
     [request setHTTPBody:body];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%tu", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return request;
 }
 
@@ -2256,7 +2280,7 @@ int const JivePushDeviceType = 3;
     
     [request setHTTPBody:body];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
+    [request setValue:[NSString stringWithFormat:@"%tu", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
     return request;
 }
 
