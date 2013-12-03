@@ -20,12 +20,6 @@ Pod::Spec.new do |s|
     s.osx.deployment_target = "10.8"
     s.osx.frameworks        = "CoreServices", "SystemConfiguration"
     
-    # Disable arc
-    s.subspec "no-arc" do |na|
-        na.source_files = "lib/NSData+JiveBase64.{h,m}"
-        na.requires_arc = false
-    end
-    
     # call update-JiveiOSSDKVersion.bash with the pod's version number
     s.prepare_command = <<-CMD
         ./jive-ios-sdk/update-JiveiOSSDKVersion.bash #{s.version}
