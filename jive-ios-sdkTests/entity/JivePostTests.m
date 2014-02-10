@@ -23,7 +23,8 @@
 @implementation JivePostTests
 
 - (void)setUp {
-    self.typedObject = [[JivePost alloc] init];
+    [super setUp];
+    self.object = [[JivePost alloc] init];
 }
 
 - (JivePost *)post {
@@ -87,6 +88,16 @@
     STAssertTrue([[categoriesJSON class] isSubclassOfClass:[NSArray class]], @"Jive not converted");
     STAssertEquals([categoriesJSON count], (NSUInteger)1, @"Jive dictionary had the wrong number of entries");
     STAssertEqualObjects([categoriesJSON objectAtIndex:0], category, @"Wrong value");
+}
+
+- (void)assertContentToJSON:(id)JSON {
+    STAssertTrue([[JSON class] isSubclassOfClass:[NSDictionary class]], @"Generated JSON has the wrong class");
+    STAssertEquals([JSON count], (NSUInteger)6, @"Initial dictionary had the wrong number of entries");
+    STAssertEqualObjects([JSON objectForKey:@"id"], self.content.jiveId, @"Wrong id");
+    STAssertEqualObjects([JSON objectForKey:JiveTypedObjectAttributes.type], self.content.type, @"Wrong type");
+    STAssertEqualObjects([JSON objectForKey:JiveContentAttributes.parent], self.content.parent, @"Wrong parent");
+    STAssertEqualObjects([JSON objectForKey:JiveContentAttributes.subject], self.content.subject, @"Wrong subject");
+    STAssertEqualObjects([JSON objectForKey:JiveContentAttributes.status], self.content.status, @"Wrong status");
 }
 
 - (void)testPostToJSON_alternate {
@@ -189,7 +200,7 @@
     self.post.visibleToExternalContributors = [NSNumber numberWithBool:YES];
     
     id JSON = [self.post toJSONDictionary];
-    JivePost *newContent = [JivePost instanceFromJSON:JSON];
+    JivePost *newContent = [JivePost objectFromJSON:JSON withInstance:self.instance];
     
     STAssertTrue([[newContent class] isSubclassOfClass:[self.post class]], @"Wrong item class");
     STAssertEqualObjects(newContent.type, self.post.type, @"Wrong type");
@@ -224,7 +235,7 @@
     self.post.restrictComments = [NSNumber numberWithBool:YES];
     
     id JSON = [self.post toJSONDictionary];
-    JivePost *newContent = [JivePost instanceFromJSON:JSON];
+    JivePost *newContent = [JivePost objectFromJSON:JSON withInstance:self.instance];
     
     STAssertTrue([[newContent class] isSubclassOfClass:[self.post class]], @"Wrong item class");
     STAssertEqualObjects(newContent.type, self.post.type, @"Wrong type");

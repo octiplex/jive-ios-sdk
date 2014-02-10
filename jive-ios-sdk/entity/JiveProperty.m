@@ -24,6 +24,7 @@ struct JivePropertyTypes const JivePropertyTypes = {
     .boolean = @"boolean",
     .string = @"string",
     .number = @"integer",
+    .integer = @"int",
 };
 
 struct JivePropertyAttributes const JivePropertyAttributes = {
@@ -36,21 +37,37 @@ struct JivePropertyAttributes const JivePropertyAttributes = {
     .value = @"value",
 };
 
+struct JivePropertyNames const JivePropertyNames = {
+    .instanceURL = @"instance.url",
+    .statusUpdateMaxCharacters = @"feature.status_update.characters",
+    .statusUpdatesEnabled = @"jive.coreapi.enable.statusupdates",
+    .blogsEnabled = @"feature.blog.enabled",
+    .realTimeChatEnabled = @"feature.rtc.enabled",
+    .imagesEnabled = @"feature.images.enabled",
+    .personalStatusUpdatesEnabled = @"feature.status_update.enabled",
+    .placeStatusUpdatesEnabled = @"feature.status_update_place.enabled",
+    .repostStatusUpdatesEnabled = @"feature.status_update_repost.enabled",
+    .mobileBinaryDownloadsDisabled = @"jive.coreapi.disable.binarydownloads.mobileonly",
+    .shareEnabled = @"feature.share.enabled",
+    .maxAttachmentSize = @"attachments.maxAttachmentSize",
+    .videoModuleEnabled = @"feature.module.video.enabled",
+};
+
 @implementation JiveProperty
 
 @synthesize availability, defaultValue, jiveDescription, name, since, type, value;
 
 #pragma mark - JiveObject
 
-- (BOOL) deserialize:(id) JSON {
+- (BOOL) deserialize:(id)JSON fromInstance:(Jive *)instance {
     if (![JSON objectForKey:JivePropertyAttributes.type]) {
         return false;
     }
     
     // Make sure the type is deserialized first.
-    [self deserializeKey:JivePropertyAttributes.type fromJSON:JSON];
+    [self deserializeKey:JivePropertyAttributes.type fromJSON:JSON fromInstance:instance];
     
-    return [super deserialize:JSON];
+    return [super deserialize:JSON fromInstance:instance];
 }
 
 - (NSDictionary *)toJSONDictionary {
@@ -72,7 +89,8 @@ struct JivePropertyAttributes const JivePropertyAttributes = {
         [self setValue:(NSNumber *)newValue forKey:property];
     } else if ([self.type isEqualToString:JivePropertyTypes.string]) {
         [self setValue:(NSString *)newValue forKey:property];
-    } else if ([self.type isEqualToString:JivePropertyTypes.number]) {
+    } else if ([self.type isEqualToString:JivePropertyTypes.number] ||
+               [self.type isEqualToString:JivePropertyTypes.integer]) {
         [self setValue:(NSNumber *)newValue forKey:property];
     } else {
         NSAssert(false, @"Unknown type (%@) for property (%@)", self.type, property);
@@ -96,7 +114,8 @@ struct JivePropertyAttributes const JivePropertyAttributes = {
 }
 
 - (NSNumber *)valueAsNumber {
-    if (![self.type isEqualToString:JivePropertyTypes.number]) {
+    if (![self.type isEqualToString:JivePropertyTypes.number] &&
+        ![self.type isEqualToString:JivePropertyTypes.integer]) {
         return nil;
     }
     

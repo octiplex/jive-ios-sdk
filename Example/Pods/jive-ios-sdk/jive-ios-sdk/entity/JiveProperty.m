@@ -18,11 +18,12 @@
 //
 
 #import "JiveProperty.h"
+#import "JiveObject_internal.h"
 
 struct JivePropertyTypes const JivePropertyTypes = {
     .boolean = @"boolean",
     .string = @"string",
-    .number = @"number",
+    .number = @"integer",
 };
 
 struct JivePropertyAttributes const JivePropertyAttributes = {
@@ -35,11 +36,34 @@ struct JivePropertyAttributes const JivePropertyAttributes = {
     .value = @"value",
 };
 
+struct JivePropertyNames const JivePropertyNames = {
+    .instanceURL = @"instance.url",
+    .statusUpdateMaxCharacters = @"feature.status_update.characters",
+    .statusUpdatesEnabled = @"jive.coreapi.enable.statusupdates",
+    .realTimeChatEnabled = @"feature.rtc.enabled",
+    .imagesEnabled = @"feature.images.enabled",
+    .personalStatusUpdatesEnabled = @"feature.status_update.enabled",
+    .placeStatusUpdatesEnabled = @"feature.status_update_place.enabled",
+    .repostStatusUpdatesEnabled = @"feature.status_update_repost.enabled",
+    .mobileBinaryDownloadsDisabled = @"jive.coreapi.disable.binarydownloads.mobileonly",
+};
+
 @implementation JiveProperty
 
 @synthesize availability, defaultValue, jiveDescription, name, since, type, value;
 
 #pragma mark - JiveObject
+
+- (BOOL) deserialize:(id)JSON fromInstance:(Jive *)instance {
+    if (![JSON objectForKey:JivePropertyAttributes.type]) {
+        return false;
+    }
+    
+    // Make sure the type is deserialized first.
+    [self deserializeKey:JivePropertyAttributes.type fromJSON:JSON fromInstance:instance];
+    
+    return [super deserialize:JSON fromInstance:instance];
+}
 
 - (NSDictionary *)toJSONDictionary {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];

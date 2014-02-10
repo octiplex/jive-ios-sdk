@@ -27,6 +27,7 @@
 #import "AFJSONRequestOperation.h"
 #import "Jive_internal.h"
 #import "JAPIRequestOperation.h"
+#import "NSError+Jive.h"
 
 struct JivePersonAttributes const JivePersonAttributes = {
 	.addresses = @"addresses",
@@ -87,16 +88,17 @@ struct JivePersonResourceAttributes const JivePersonResourceAttributes = {
 @synthesize addresses, displayName, emails, followerCount, followingCount, jiveId, jive, location, name, phoneNumbers, photos, published, status, tags, thumbnailUrl, updated;
 
 NSString * const JivePersonType = @"person";
+NSString * const JivePersonGuestID = @"-1";
 
 + (void)load {
     if (self == [JivePerson class])
         [super registerClass:self forType:JivePersonType];
 }
 
-+ (id)instanceFromJSON:(NSDictionary *)JSON withJive:(Jive *)jive {
-    JivePerson *newPerson = [JivePerson instanceFromJSON:JSON];
++ (id)objectFromJSON:(NSDictionary *)JSON withInstance:(Jive *)instance {
+    JivePerson *newPerson = [super objectFromJSON:JSON withInstance:instance];
     
-    newPerson.jiveInstance = jive;
+    newPerson.jiveInstance = instance;
     return newPerson;
 }
 
@@ -115,6 +117,10 @@ NSString * const JivePersonType = @"person";
                            nil];
     
     return [propertyClasses objectForKey:propertyName];
+}
+
+- (BOOL)isGuest {
+    return self.jiveId && [self.jiveId isEqualToString:JivePersonGuestID];
 }
 
 #pragma mark - JiveObject
@@ -272,6 +278,14 @@ NSString * const JivePersonType = @"person";
                    onError:errorBlock] start];
 }
 
+- (void) unFollow:(JivePerson *)target
+     onComplete:(JiveCompletedBlock)completeBlock
+        onError:(JiveErrorBlock)errorBlock {
+    [[self unFollowOperation:target
+                onComplete:completeBlock
+                   onError:errorBlock] start];
+}
+
 - (void) activitiesWithOptions:(JiveDateLimitedRequestOptions *)options
                     onComplete:(JiveArrayCompleteBlock)completeBlock
                        onError:(JiveErrorBlock)errorBlock {
@@ -364,10 +378,19 @@ NSString * const JivePersonType = @"person";
                        onError:errorBlock] start];
 }
 
+- (void) termsAndConditions:(JiveTermsAndConditionsCompleteBlock)completeBlock
+                    onError:(JiveErrorBlock)error {
+    [[self termsAndConditionsOperation:completeBlock onError:error] start];
+}
+
+- (void) acceptTermsAndConditions:(JiveCompletedBlock)completeBlock onError:(JiveErrorBlock)error {
+    [[self acceptTermsAndConditionsOperation:completeBlock onError:error] start];
+}
+
 - (AFJSONRequestOperation<JiveRetryingOperation> *) refreshOperationWithOptions:(JiveReturnFieldsRequestOptions *)options
                                                                      onComplete:(JivePersonCompleteBlock)completeBlock
                                                                         onError:(JiveErrorBlock)errorBlock {
-    NSURLRequest *request = [self.jiveInstance requestWithOptions:options
+    NSURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:options
                                                       andTemplate:[self.selfRef path], nil];
     
     return [self updateJiveTypedObject:self
@@ -379,14 +402,16 @@ NSString * const JivePersonType = @"person";
 - (AFJSONRequestOperation<JiveRetryingOperation> *) managerOperationWithOptions:(JiveReturnFieldsRequestOptions *)options
                                                                      onComplete:(JivePersonCompleteBlock)completeBlock
                                                                         onError:(JiveErrorBlock)errorBlock {
-    NSMutableURLRequest *request = [self.jiveInstance requestWithOptions:options
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:options
                                                              andTemplate:[self.managerRef path], nil];
     
     return [self.jiveInstance operationWithRequest:request
                                         onComplete:completeBlock
                                            onError:errorBlock
                                    responseHandler:^id(id JSON) {
-                                       JivePerson *manager = [JivePerson instanceFromJSON:JSON];
+                                       self.jiveInstance.badInstanceURL = nil;
+                                       JivePerson *manager = [JivePerson objectFromJSON:JSON
+                                                                             withInstance:self.jiveInstance];
                                        
                                        manager.jiveInstance = self.jiveInstance;
                                        return manager;
@@ -395,10 +420,10 @@ NSString * const JivePersonType = @"person";
 
 - (AFJSONRequestOperation<JiveRetryingOperation> *) deleteOperationOnComplete:(JiveCompletedBlock)completeBlock
                                                                       onError:(JiveErrorBlock)errorBlock {
-    NSMutableURLRequest *request = [self.jiveInstance requestWithOptions:nil
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:nil
                                                              andTemplate:[self.selfRef path], nil];
     
-    [request setHTTPMethod:@"DELETE"];
+    [request setHTTPMethod:JiveHTTPMethodTypes.DELETE];
     return [self emptyResponseOperationWithRequest:request
                                         onComplete:completeBlock
                                            onError:errorBlock];
@@ -414,7 +439,7 @@ NSString * const JivePersonType = @"person";
 
 - (AFJSONRequestOperation<JiveRetryingOperation> *) updateOperationOnComplete:(JivePersonCompleteBlock)completeBlock
                                                                       onError:(JiveErrorBlock)errorBlock {
-    NSMutableURLRequest *request = [self.jiveInstance requestWithOptions:nil
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:nil
                                                              andTemplate:[self.selfRef path], nil];
     NSData *body = [NSJSONSerialization dataWithJSONObject:self.toJSONDictionary
                                                    options:0
@@ -423,7 +448,7 @@ NSString * const JivePersonType = @"person";
     [request setHTTPBody:body];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%i", [[request HTTPBody] length]] forHTTPHeaderField:@"Content-Length"];
-    [request setHTTPMethod:@"PUT"];
+    [request setHTTPMethod:JiveHTTPMethodTypes.PUT];
     return [self updateJiveTypedObject:self
                            withRequest:request
                             onComplete:completeBlock
@@ -434,18 +459,34 @@ NSString * const JivePersonType = @"person";
                                                          onComplete:(JiveCompletedBlock)completeBlock
                                                             onError:(JiveErrorBlock)errorBlock {
     NSString *path = [[self.followingRef path] stringByAppendingPathComponent:target.jiveId];
-    NSMutableURLRequest *request = [self.jiveInstance requestWithOptions:nil andTemplate:path, nil];
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:nil andTemplate:path, nil];
     
-    [request setHTTPMethod:@"PUT"];
+    [request setHTTPMethod:JiveHTTPMethodTypes.PUT];
     return [self emptyResponseOperationWithRequest:request
                                         onComplete:completeBlock
                                            onError:errorBlock];
 }
 
+- (AFJSONRequestOperation<JiveRetryingOperation> *) unFollowOperation:(JivePerson *)target
+                                                         onComplete:(JiveCompletedBlock)completeBlock
+                                                            onError:(JiveErrorBlock)errorBlock {
+    NSString *path = [[self.followingRef path] stringByAppendingPathComponent:target.jiveId];
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:nil andTemplate:path, nil];
+    
+    [request setHTTPMethod:JiveHTTPMethodTypes.DELETE];
+    return [self emptyResponseOperationWithRequest:request onComplete:completeBlock onError:^(NSError *error) {
+        if ([error.userInfo[JiveErrorKeyHTTPStatusCode] isEqualToNumber:@409]) { // 409 is conflict error returned when you try to delete a following relationship that doesn't exist.  We may have this situation
+            completeBlock();                                                          // with legacy data when following was done before this fix -TABDEV-2545
+        } else {
+            errorBlock(error);
+        }
+    }];
+}
+
 - (AFJSONRequestOperation<JiveRetryingOperation> *) activitiesOperationWithOptions:(JiveDateLimitedRequestOptions *)options
                                                                         onComplete:(JiveArrayCompleteBlock)completeBlock
                                                                            onError:(JiveErrorBlock)errorBlock {
-    NSURLRequest *request = [self.jiveInstance requestWithOptions:options
+    NSURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:options
                                                       andTemplate:[self.activityRef path], nil];
     
     return [self.jiveInstance listOperationForClass:[JiveActivity class]
@@ -509,12 +550,12 @@ NSString * const JivePersonType = @"person";
                                   NSStringFromSelector(@selector(ref)),
                                   NSStringFromSelector(@selector(absoluteString))];
     NSArray *targetURIs = [followingInStreams count] ? [followingInStreams valueForKeyPath:targetURIKeyPath] : [NSArray array];
-    NSMutableURLRequest *request = [self.jiveInstance requestWithOptions:options
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:options
                                                              andTemplate:[self.followingInRef path], nil];
     NSData *body = [NSJSONSerialization dataWithJSONObject:targetURIs options:0 error:nil];
     
     [request setHTTPBody:body];
-    [request setHTTPMethod:@"POST"];
+    [request setHTTPMethod:JiveHTTPMethodTypes.POST];
     [request setValue:@"application/json; charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%i", request.HTTPBody.length]
    forHTTPHeaderField:@"Content-Length"];
@@ -536,7 +577,7 @@ NSString * const JivePersonType = @"person";
 - (AFJSONRequestOperation<JiveRetryingOperation> *) tasksOperationWithOptions:(JiveSortedRequestOptions *)options
                                                                    onComplete:(JiveArrayCompleteBlock)completeBlock
                                                                       onError:(JiveErrorBlock)errorBlock {
-    NSURLRequest *request = [self.jiveInstance requestWithOptions:options
+    NSURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:options
                                                       andTemplate:[self.tasksRef path], nil];
     
     return [self.jiveInstance listOperationForClass:[JiveContent class]
@@ -548,7 +589,7 @@ NSString * const JivePersonType = @"person";
 - (AFJSONRequestOperation<JiveRetryingOperation> *) blogOperationWithOptions:(JiveReturnFieldsRequestOptions *)options
                                                                   onComplete:(JiveBlogCompleteBlock)completeBlock
                                                                      onError:(JiveErrorBlock)errorBlock {
-    NSMutableURLRequest *request = [self.jiveInstance requestWithOptions:options
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:options
                                                              andTemplate:[self.blogRef path], nil];
     
     return [self entityOperationForClass:[JiveBlog class]
@@ -565,11 +606,51 @@ NSString * const JivePersonType = @"person";
                                                                   options:options
                                                               andTemplate:[self.tasksRef path], nil];
     
-    [request setHTTPMethod:@"POST"];
+    [request setHTTPMethod:JiveHTTPMethodTypes.POST];
     return [self updateJiveTypedObject:task
                            withRequest:request
                             onComplete:completeBlock
                                onError:errorBlock];
+}
+
+- (AFJSONRequestOperation<JiveRetryingOperation> *) termsAndConditionsOperation:(JiveTermsAndConditionsCompleteBlock)completeBlock
+                                                                        onError:(JiveErrorBlock)errorBlock {
+    if (self.jive.termsAndConditionsRequired.boolValue) {
+        NSString *path = [self.selfRef.path stringByAppendingPathComponent:@"termsAndConditions"];
+        NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:nil
+                                                                             andTemplate:path, nil];
+        
+        return [self entityOperationForClass:[JiveTermsAndConditions class]
+                                     request:request
+                                  onComplete:completeBlock
+                                     onError:^(NSError *error) {
+                                         if (error.code == 3) {
+                                             if (completeBlock) {
+                                                 completeBlock([JiveTermsAndConditions new]);
+                                             }
+                                         } else if (errorBlock) {
+                                             errorBlock(error);
+                                         }
+                                     }];
+    }
+    
+    if (completeBlock) {
+        completeBlock([JiveTermsAndConditions new]);
+    }
+    
+    return nil;
+}
+
+- (AFJSONRequestOperation<JiveRetryingOperation> *) acceptTermsAndConditionsOperation:(JiveCompletedBlock)completeBlock
+                                                                              onError:(JiveErrorBlock)errorBlock {
+    NSString *path = [self.selfRef.path stringByAppendingPathComponent:@"acceptTermsAndConditions"];
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:nil
+                                                                         andTemplate:path, nil];
+    
+    [request setHTTPMethod:JiveHTTPMethodTypes.POST];
+    return [self emptyResponseOperationWithRequest:request
+                                        onComplete:completeBlock
+                                           onError:errorBlock];
 }
 
 #pragma mark - helper methods
@@ -584,7 +665,8 @@ NSString * const JivePersonType = @"person";
                                            onError:errorBlock
                                    responseHandler:^id(id JSON) {
                                        if ([target.type isEqualToString:JSON[JiveTypedObjectAttributes.type]]) {
-                                           [target deserialize:JSON];
+                                           self.jiveInstance.badInstanceURL = nil;
+                                           [target deserialize:JSON fromInstance:self.jiveInstance];
                                            return target;
                                        } else {
                                            return nil;
@@ -596,20 +678,16 @@ NSString * const JivePersonType = @"person";
                                                             withOptions:(JivePagedRequestOptions *)options
                                                              onComplete:(JiveArrayCompleteBlock)completeBlock
                                                                 onError:(JiveErrorBlock)errorBlock {
-    NSMutableURLRequest *request = [self.jiveInstance requestWithOptions:options
+    NSMutableURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:options
                                                              andTemplate:[url path], nil];
     
     return [self.jiveInstance operationWithRequest:request
                                         onComplete:completeBlock
                                            onError:errorBlock
                                    responseHandler:(^id(id JSON) {
-        NSArray *people = [JivePerson instancesFromJSONList:[JSON objectForKey:@"list"]];
-        
-        for (JivePerson *person in people) {
-            person.jiveInstance = self.jiveInstance;
-        }
-        
-        return people;
+        self.jiveInstance.badInstanceURL = nil;
+        return [JivePerson objectsFromJSONList:[JSON objectForKey:@"list"]
+                                    withInstance:self.jiveInstance];
     })];
 }
 
@@ -617,7 +695,7 @@ NSString * const JivePersonType = @"person";
                                                              withOptions:(JiveReturnFieldsRequestOptions *)options
                                                               onComplete:(JiveArrayCompleteBlock)completeBlock
                                                                  onError:(JiveErrorBlock)errorBlock {
-    NSURLRequest *request = [self.jiveInstance requestWithOptions:options
+    NSURLRequest *request = [self.jiveInstance credentialedRequestWithOptions:options
                                                       andTemplate:[url path], nil];
     
     return [self.jiveInstance listOperationForClass:[JiveStream class]
@@ -635,7 +713,9 @@ NSString * const JivePersonType = @"person";
                                         onComplete:completeBlock
                                            onError:errorBlock
                                    responseHandler:^id(id JSON) {
-                                       return [clazz instanceFromJSON:JSON];
+                                       self.jiveInstance.badInstanceURL = nil;
+                                       return [clazz objectFromJSON:JSON
+                                                       withInstance:self.jiveInstance];
                                    }];
 }
 

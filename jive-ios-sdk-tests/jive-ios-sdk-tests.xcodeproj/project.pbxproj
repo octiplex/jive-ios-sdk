@@ -7,9 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0FAA9F6C184D4FEC0051698C /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FAA9F6B184D4FEC0051698C /* libxml2.dylib */; };
 		215040D916DEA27200CD0AAE /* jive-software.png in Resources */ = {isa = PBXBuildFile; fileRef = 215040D816DEA27100CD0AAE /* jive-software.png */; };
 		23680DAE16CAF9DB007EAF2F /* JVUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 23680DAD16CAF9DB007EAF2F /* JVUtilities.m */; };
 		2385546716EFED880045B0ED /* instance_info.json in Resources */ = {isa = PBXBuildFile; fileRef = 2385546616EFED880045B0ED /* instance_info.json */; };
+		239F70E3188F379200F0AFE9 /* EditSameDiscussionWithSameUserAndMultiLoginTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 239F70E0188F379200F0AFE9 /* EditSameDiscussionWithSameUserAndMultiLoginTest.m */; };
+		239F70E4188F379200F0AFE9 /* EditSameDocWithSameUserAndMultiLoginTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 239F70E1188F379200F0AFE9 /* EditSameDocWithSameUserAndMultiLoginTest.m */; };
+		239F70E5188F379200F0AFE9 /* EditSameDocWithTwoUsersTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 239F70E2188F379200F0AFE9 /* EditSameDocWithTwoUsersTest.m */; };
 		2D648B3416F286A600E97038 /* CreateImageTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 21349A7C16DEA07A006A8BFD /* CreateImageTests.m */; };
 		2D648B3516F286A600E97038 /* SearchPlace.m in Sources */ = {isa = PBXBuildFile; fileRef = 2DB3AED516D6A43000428AA4 /* SearchPlace.m */; };
 		2D648B3616F286A600E97038 /* SearchPeople.m in Sources */ = {isa = PBXBuildFile; fileRef = 2DB3AED316D6A41300428AA4 /* SearchPeople.m */; };
@@ -46,6 +50,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		0FAA9F70184D4FEC0051698C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B87DD39D16A8A3E7009CACF5 /* jive-ios-sdk.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = B86552141798848A00AAF1AD;
+			remoteInfo = "jive-ios-sdk-headers";
+		};
 		B8F5EFA01739A5ED005F15AA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B87DD39D16A8A3E7009CACF5 /* jive-ios-sdk.xcodeproj */;
@@ -70,12 +81,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0FAA9F6B184D4FEC0051698C /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
 		0FC2FEC316AA148B00DDFF68 /* JVContentTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JVContentTest.m; sourceTree = "<group>"; };
 		21349A7C16DEA07A006A8BFD /* CreateImageTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreateImageTests.m; sourceTree = "<group>"; };
 		215040D816DEA27100CD0AAE /* jive-software.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "jive-software.png"; sourceTree = "<group>"; };
 		23680DAC16CAF9BA007EAF2F /* JVUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JVUtilities.h; sourceTree = "<group>"; };
 		23680DAD16CAF9DB007EAF2F /* JVUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JVUtilities.m; sourceTree = "<group>"; };
 		2385546616EFED880045B0ED /* instance_info.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = instance_info.json; sourceTree = "<group>"; };
+		239F70E0188F379200F0AFE9 /* EditSameDiscussionWithSameUserAndMultiLoginTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditSameDiscussionWithSameUserAndMultiLoginTest.m; sourceTree = "<group>"; };
+		239F70E1188F379200F0AFE9 /* EditSameDocWithSameUserAndMultiLoginTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditSameDocWithSameUserAndMultiLoginTest.m; sourceTree = "<group>"; };
+		239F70E2188F379200F0AFE9 /* EditSameDocWithTwoUsersTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditSameDocWithTwoUsersTest.m; sourceTree = "<group>"; };
 		2D99613F16E91A2C007A4A5B /* CreateAssociations.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreateAssociations.m; sourceTree = "<group>"; };
 		2DB3AEB016D6A36800428AA4 /* CreateAndDeleteStreams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreateAndDeleteStreams.m; sourceTree = "<group>"; };
 		2DB3AEB116D6A36800428AA4 /* StreamActivities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamActivities.m; sourceTree = "<group>"; };
@@ -121,6 +136,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FAA9F6C184D4FEC0051698C /* libxml2.dylib in Frameworks */,
 				B8D2511A16B974A000412DA5 /* SystemConfiguration.framework in Frameworks */,
 				B8D2511616B9749A00412DA5 /* MobileCoreServices.framework in Frameworks */,
 				B8A71F1016A89DFA00A7D2CE /* SenTestingKit.framework in Frameworks */,
@@ -170,6 +186,16 @@
 			children = (
 			);
 			path = inbox;
+			sourceTree = "<group>";
+		};
+		239F70DC188F373F00F0AFE9 /* lockEdit */ = {
+			isa = PBXGroup;
+			children = (
+				239F70E0188F379200F0AFE9 /* EditSameDiscussionWithSameUserAndMultiLoginTest.m */,
+				239F70E1188F379200F0AFE9 /* EditSameDocWithSameUserAndMultiLoginTest.m */,
+				239F70E2188F379200F0AFE9 /* EditSameDocWithTwoUsersTest.m */,
+			);
+			name = lockEdit;
 			sourceTree = "<group>";
 		};
 		2DB3AEAB16D6A34D00428AA4 /* streams */ = {
@@ -243,6 +269,7 @@
 		B8A71EB916A89CCE00A7D2CE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0FAA9F6B184D4FEC0051698C /* libxml2.dylib */,
 				B8A71EBE16A89CCE00A7D2CE /* CoreGraphics.framework */,
 				B8A71EBC16A89CCE00A7D2CE /* Foundation.framework */,
 				B8D2511516B9749A00412DA5 /* MobileCoreServices.framework */,
@@ -256,6 +283,7 @@
 		B8A71F1316A89DFA00A7D2CE /* jive-ios-sdk-tests */ = {
 			isa = PBXGroup;
 			children = (
+				239F70DC188F373F00F0AFE9 /* lockEdit */,
 				21349A7816DEA049006A8BFD /* images */,
 				2DB3AED016D6A3EE00428AA4 /* search */,
 				2DB3AEAF16D6A35300428AA4 /* activities */,
@@ -299,6 +327,7 @@
 			children = (
 				B8F5EFA11739A5ED005F15AA /* libJive.a */,
 				B8F5EFA31739A5ED005F15AA /* jive-ios-sdkTests.octest */,
+				0FAA9F71184D4FEC0051698C /* libjive-ios-sdk-headers.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -361,6 +390,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		0FAA9F71184D4FEC0051698C /* libjive-ios-sdk-headers.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libjive-ios-sdk-headers.a";
+			remoteRef = 0FAA9F70184D4FEC0051698C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		B8F5EFA11739A5ED005F15AA /* libJive.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -449,8 +485,10 @@
 				2D648B4816F286C400E97038 /* UpdateAndDeleteDocument.m in Sources */,
 				2D648B4916F286C400E97038 /* JVContentTest.m in Sources */,
 				2D648B4A16F286C400E97038 /* JVPeopleTest.m in Sources */,
+				239F70E4188F379200F0AFE9 /* EditSameDocWithSameUserAndMultiLoginTest.m in Sources */,
 				2D648B4B16F286C400E97038 /* JVPlacesTest.m in Sources */,
 				2D648B3E16F286BC00E97038 /* CreateAndDeleteStreams.m in Sources */,
+				239F70E5188F379200F0AFE9 /* EditSameDocWithTwoUsersTest.m in Sources */,
 				2D648B3F16F286BC00E97038 /* StreamActivities.m in Sources */,
 				2D648B4016F286BC00E97038 /* StreamAssociations.m in Sources */,
 				2D648B4116F286BC00E97038 /* CreateAssociations.m in Sources */,
@@ -464,6 +502,7 @@
 				2D648B3B16F286A600E97038 /* RecentContentWithOptions.m in Sources */,
 				2D648B3C16F286A600E97038 /* RecentPeopleWithOptions.m in Sources */,
 				2D648B3D16F286A600E97038 /* RecentPlacesWithOptions.m in Sources */,
+				239F70E3188F379200F0AFE9 /* EditSameDiscussionWithSameUserAndMultiLoginTest.m in Sources */,
 				B8A71F1B16A89DFA00A7D2CE /* JiveTestCase.m in Sources */,
 				23680DAE16CAF9DB007EAF2F /* JVUtilities.m in Sources */,
 			);

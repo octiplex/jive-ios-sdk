@@ -48,6 +48,7 @@
 #import "JiveFavorite.h"
 #import "JiveTask.h"
 #import "JiveUpdate.h"
+#import "JiveExternalObject.h"
 #import "JivePersonJive.h"
 #import "JiveName.h"
 #import "JiveAddress.h"
@@ -91,6 +92,8 @@
 #import "JiveNSDictionary+URLArguments.h"
 #import "JiveResponseBlocks.h"
 #import "JiveExternalURLEntity.h"
+#import "JiveOAuthCredentials.h"
+#import "JiveTermsAndConditions.h"
 
 extern int const JivePushDeviceType;
 
@@ -106,6 +109,10 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 //! \class Jive
 @interface Jive : NSObject
 
+//! The URL used to init this jive instance.
+@property (nonatomic, strong) NSURL* jiveInstanceURL;
+@property (nonatomic, readonly) JivePlatformVersion *platformVersion;
+
 @property (nonatomic, weak) id<JiveOperationRetrier> defaultOperationRetrier;
 
 @property (atomic, copy) JiveAuthenticationLoggerBlock verboseAuthenticationLoggerBlock;
@@ -117,15 +124,25 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 //! The init method to used when creating a Jive instance for a specific URL and credentials.
 - (id) initWithJiveInstance:(NSURL *)jiveInstanceURL authorizationDelegate:(id<JiveAuthorizationDelegate>) delegate;
 
-//! The URL used to init this jive instance.
-- (NSURL*) jiveInstanceURL;
-
 #pragma mark - Version
 
-//! https://developers.jivesoftware.com/api/v3/rest/#versioning This is the only method pair that doesn't use JiveAuthorizationDelegate
-- (void) versionForInstance:(NSURL *)jiveInstanceURL onComplete:(void (^)(JivePlatformVersion *version))completeBlock onError:(JiveErrorBlock)errorBlock;
-//! https://developers.jivesoftware.com/api/v3/rest/#versioning This is the only method pair that doesn't use JiveAuthorizationDelegate
-- (AFJSONRequestOperation<JiveRetryingOperation> *) versionOperationForInstance:(NSURL *)jiveInstanceURL onComplete:(void (^)(JivePlatformVersion *version))completeBlock onError:(JiveErrorBlock)errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/#versioning
+- (void) versionForInstance:(NSURL *)jiveInstanceURL onComplete:(JivePlatformVersionBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/#versioning
+- (AFJSONRequestOperation<JiveRetryingOperation> *) versionOperationForInstance:(NSURL *)jiveInstanceURL onComplete:(JivePlatformVersionBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+
+#pragma mark - Terms and Conditions
+
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#getTermsAndConditions(String)
+- (void) termsAndConditions:(JiveTermsAndConditionsCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#acceptTermsAndConditions(String)
+- (void) acceptTermsAndConditions:(JiveCompletedBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#getTermsAndConditions(String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) termsAndConditionsOperation:(JiveTermsAndConditionsCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#acceptTermsAndConditions(String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) acceptTermsAndConditionsOperation:(JiveCompletedBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+
 
 #pragma mark - Activities
 
@@ -223,6 +240,8 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 - (void) updatePerson:(JivePerson *)person onComplete:(void (^)(JivePerson *))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#createFollowing(String,%20String)
 - (void) person:(JivePerson *)person follow:(JivePerson *)target onComplete:(void (^)(void))complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#deleteFollowing(String,%20String)
+- (void) person:(JivePerson *)person unFollow:(JivePerson *)target onComplete:(void (^)(void))complete onError:(JiveErrorBlock)errorBlock;
 
 //! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#getActivity(String,%20String,%20String,%20int,%20String)
 - (void) activities:(JivePerson *)person withOptions:(JiveDateLimitedRequestOptions *)options onComplete:(void(^)(NSArray *))complete onError:(JiveErrorBlock)error;
@@ -279,6 +298,8 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 - (AFJSONRequestOperation<JiveRetryingOperation> *) updatePersonOperation:(JivePerson *)person onComplete:(void (^)(JivePerson *))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#createFollowing(String,%20String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *) personOperation:(JivePerson *)person follow:(JivePerson *)target onComplete:(void (^)(void))complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#deleteFollowing(String,%20String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) personOperation:(JivePerson *)person unFollow:(JivePerson *)target onComplete:(void (^)(void))complete onError:(JiveErrorBlock)errorBlock;
 
 //! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#getActivity(String,%20String,%20String,%20int,%20String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *) activitiesOperation:(JivePerson *)person withOptions:(JiveDateLimitedRequestOptions *)options onComplete:(void(^)(NSArray *))complete onError:(JiveErrorBlock)error;
@@ -322,12 +343,15 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 
 #pragma mark - Inbox
 
+- (void) inbox:(JiveInboxOptions*) options onComplete:(JiveDateLimitedObjectsCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock DEPRECATED_ATTRIBUTE;
 //! https://developers.jivesoftware.com/api/v3/rest/InboxService.html#getActivity(String,%20String,%20int,%20List<String>,%20String)
-- (void) inbox:(JiveInboxOptions*) options onComplete:(JiveDateLimitedObjectsCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+- (void) inboxWithUnreadCount:(JiveInboxOptions*)options onComplete:(JiveInboxObjectsCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
 - (void) markInboxEntries:(NSArray *)inboxEntries asRead:(BOOL)read onComplete:(void(^)(void))completeBlock onError:(JiveErrorBlock)errorBlock;
 - (void) markInboxEntryUpdates:(NSArray *)inboxEntryUpdates asRead:(BOOL)read onComplete:(void(^)(void))completeBlock onError:(JiveErrorBlock)errorBlock;
 
-- (AFJSONRequestOperation<JiveRetryingOperation> *)inboxOperation:(JiveInboxOptions *)options onComplete:(JiveDateLimitedObjectsCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+- (AFJSONRequestOperation<JiveRetryingOperation> *)inboxOperation:(JiveInboxOptions *)options onComplete:(JiveDateLimitedObjectsCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock DEPRECATED_ATTRIBUTE;
+//! https://developers.jivesoftware.com/api/v3/rest/InboxService.html#getActivity(String,%20String,%20int,%20List<String>,%20String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) inboxWithUnreadCountOperation:(JiveInboxOptions*)options onComplete:(JiveInboxObjectsCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
 
 #pragma mark - Environment
 
@@ -440,19 +464,19 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 - (void) trendingContents:(JiveTrendingContentRequestOptions *)options onComplete:(void (^)(NSArray *))complete onError:(JiveErrorBlock)error;
 
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createContent(String,%20String)
-- (void) createContent:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) createContent:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createContent(MultipartBody,%20String)
-- (void) createDocument:(JiveDocument *)document withAttachments:(NSArray *)attachmentURLs options:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) createDocument:(JiveDocument *)document withAttachments:(NSArray *)attachmentURLs options:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createContent(MultipartBody,%20String)
-- (void) createPost:(JivePost *)post withAttachments:(NSArray *)attachmentURLs options:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) createPost:(JivePost *)post withAttachments:(NSArray *)attachmentURLs options:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createContent(MultipartBody,%20String)
-- (void) createUpdate:(JiveUpdate *)update withAttachments:(NSArray *)attachments options:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) createUpdate:(JiveUpdate *)update withAttachments:(NSArray *)attachments options:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/DirectMessageService.html#createDirectMessage(String,%20String)
-- (void) createDirectMessage:(JiveContent *)content withTargets:(JiveTargetList *)targets andOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) createDirectMessage:(JiveContent *)content withTargets:(JiveTargetList *)targets andOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createComment(String,%20String,%20boolean,%20String)
-- (void) createComment:(JiveComment *)comment withOptions:(JiveAuthorCommentRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) createComment:(JiveComment *)comment withOptions:(JiveAuthorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/MessageService.html#createMessage(String,%20String)
-- (void) createMessage:(JiveMessage *)message withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) createMessage:(JiveMessage *)message withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ShareService.html#createShare(String,%20String)
 - (void) createShare:(JiveContentBody *)shareMessage
           forContent:(JiveContent *)content
@@ -461,7 +485,7 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
           onComplete:(void (^)(JiveShare *))completeBlock
              onError:(JiveErrorBlock)errorBlock;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#getContent(String,%20String)
-- (void) content:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) content:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#getComments(String,%20boolean,%20boolean,%20boolean,%20int,%20int,%20String,%20String)
 - (void) commentsForContent:(JiveContent *)content withOptions:(JiveCommentsRequestOptions *)options onComplete:(void (^)(NSArray *))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/MessageService.html#getContentReplies(String,%20boolean,%20boolean,%20int,%20int,%20String,%20String)
@@ -479,14 +503,33 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#deleteContent(String)
 - (void) deleteContent:(JiveContent *)content onComplete:(void (^)(void))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#updateContent(String,%20String,%20boolean,%20String)
-- (void) updateContent:(JiveContent *)content withOptions:(JiveMinorCommentRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (void) updateContent:(JiveContent *)content withOptions:(JiveMinorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! Toggle the correct answer status of a discussion reply.
 - (void) toggleCorrectAnswer:(JiveMessage *)message onComplete:(JiveCompletedBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
 
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#getEditableContent(String,%20String)
+- (void) getEditableContent:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#lockEditableContent(String,%20String)
+- (void) lockContentForEditing:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#updateEditableContent(String,%20String,%20boolean,%20boolean,%20String)
+- (void) saveContentWhileEditing:(JiveContent *)content withOptions:(JiveMinorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#updateEditableContent(String,%20MultipartBody,%20boolean,%20String)
+- (void) saveDocumentWhileEditing:(JiveDocument *)document withAttachments:(NSArray *)attachmentURLs options:(JiveMinorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#updateEditableContent(String,%20MultipartBody,%20boolean,%20String)
+- (void) savePostWhileEditing:(JivePost *)post withAttachments:(NSArray *)attachmentURLs options:(JiveMinorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#unlockEditableContent(String)
+- (void) unlockContent:(JiveContent *)content onComplete:(JiveCompletedBlock)complete onError:(JiveErrorBlock)error;
+
+//! https://developers.jivesoftware.com/api/v3/rest/ActivityObjectEntity.html
+- (AFJSONRequestOperation<JiveRetryingOperation> *)activityObjectOperation:(JiveActivityObject *)activityObject onComplete:(void(^)(JiveContent *content))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ActivityObjectEntity.html
 - (void) activityObject:(JiveActivityObject *) activityObject contentWithCompleteBlock:(void(^)(JiveContent *content))completeBlock errorBlock:(JiveErrorBlock)errorBlock;
 //! https://developers.jivesoftware.com/api/v3/rest/CommentEntity.html
+- (AFJSONRequestOperation<JiveRetryingOperation> *)commentRootContentOperation:(JiveComment *)comment onComplete:(void(^)(JiveContent *rootContent))complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/CommentEntity.html
 - (void) comment:(JiveComment *) comment rootContentWithCompleteBlock:(void(^)(JiveContent *rootContent))completeBlock errorBlock:(void(^)(NSError *error))errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/MessageEntity.html
+- (AFJSONRequestOperation<JiveRetryingOperation> *)messageDiscussionOperation:(JiveMessage *)message onComplete:(void(^)(JiveDiscussion *discussion))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/MessageEntity.html
 - (void) message:(JiveMessage *) message discussionWithCompleteBlock:(void(^)(JiveDiscussion *discussion))completeBlock errorBlock:(void(^)(NSError *error))errorBlock;
 //! https://developers.jivesoftware.com/api/v3/rest/MessageService.html#createContentMessage(String,%20String,%20String)
@@ -506,19 +549,19 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 - (AFJSONRequestOperation<JiveRetryingOperation> *) trendingContentsOperation:(JiveTrendingContentRequestOptions *)options onComplete:(void (^)(NSArray *))complete onError:(JiveErrorBlock)error;
 
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createContent(String,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) createContentOperation:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) createContentOperation:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createContent(MultipartBody,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) createDocumentOperation:(JiveDocument *)document withAttachments:(NSArray *)attachmentURLs options:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) createDocumentOperation:(JiveDocument *)document withAttachments:(NSArray *)attachmentURLs options:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createContent(MultipartBody,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) createPostOperation:(JivePost *)post withAttachments:(NSArray *)attachmentURLs options:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) createPostOperation:(JivePost *)post withAttachments:(NSArray *)attachmentURLs options:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createContent(MultipartBody,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) createUpdateOperation:(JiveUpdate *)update withAttachments:(NSArray *)attachments options:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) createUpdateOperation:(JiveUpdate *)update withAttachments:(NSArray *)attachments options:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/DirectMessageService.html#createDirectMessage(String,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) createDirectMessageOperation:(JiveContent *)content withTargets:(JiveTargetList *)targets andOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) createDirectMessageOperation:(JiveContent *)content withTargets:(JiveTargetList *)targets andOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#createComment(String,%20String,%20boolean,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) createCommentOperation:(JiveComment *)comment withOptions:(JiveAuthorCommentRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) createCommentOperation:(JiveComment *)comment withOptions:(JiveAuthorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/MessageService.html#createMessage(String,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) createMessageOperation:(JiveMessage *)message withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) createMessageOperation:(JiveMessage *)message withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ShareService.html#createShare(String,%20String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *) createShareOperation:(JiveContentBody *)shareMessage
                                        forContent:(JiveContent *)content
@@ -527,7 +570,7 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
                                        onComplete:(void (^)(JiveShare *))completeBlock
                                           onError:(JiveErrorBlock)errorBlock;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#getContent(String,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) contentOperation:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) contentOperation:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#getComments(String,%20boolean,%20boolean,%20boolean,%20int,%20int,%20String,%20String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *) commentsOperationForContent:(JiveContent *)content withOptions:(JiveCommentsRequestOptions *)options onComplete:(void (^)(NSArray *))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/MessageService.html#getContentReplies(String,%20boolean,%20boolean,%20int,%20int,%20String,%20String)
@@ -545,9 +588,22 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#deleteContent(String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *) deleteContentOperation:(JiveContent *)content onComplete:(void (^)(void))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#updateContent(String,%20String,%20boolean,%20String)
-- (AFJSONRequestOperation<JiveRetryingOperation> *) updateContentOperation:(JiveContent *)content withOptions:(JiveMinorCommentRequestOptions *)options onComplete:(void (^)(JiveContent *))complete onError:(JiveErrorBlock)error;
+- (AFJSONRequestOperation<JiveRetryingOperation> *) updateContentOperation:(JiveContent *)content withOptions:(JiveMinorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
 //! Create an operation to toggle the correct answer status of a discussion reply.
 - (AFJSONRequestOperation<JiveRetryingOperation> *) toggleCorrectAnswerOperation:(JiveMessage *)message onComplete:(JiveCompletedBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#getEditableContent(String,%20String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) getEditableContentOperation:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#lockEditableContent(String,%20String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) lockContentForEditingOperation:(JiveContent *)content withOptions:(JiveReturnFieldsRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#updateEditableContent(String,%20String,%20boolean,%20boolean,%20String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) saveContentWhileEditingOperation:(JiveContent *)content withOptions:(JiveMinorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#updateEditableContent(String,%20MultipartBody,%20boolean,%20String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) saveDocumentWhileEditingOperation:(JiveDocument *)document withAttachments:(NSArray *)attachmentURLs options:(JiveMinorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#updateEditableContent(String,%20MultipartBody,%20boolean,%20String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) savePostWhileEditingOperation:(JivePost *)post withAttachments:(NSArray *)attachmentURLs options:(JiveMinorCommentRequestOptions *)options onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! https://developers.jivesoftware.com/api/v3/rest/ContentService.html#unlockEditableContent(String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) unlockContentOperation:(JiveContent *)content onComplete:(JiveCompletedBlock)complete onError:(JiveErrorBlock)error;
 
 #pragma mark - Members
 
@@ -639,34 +695,64 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 - (void)imagesFromURL:(NSURL *)imagesURL onComplete:(void (^)(NSArray *images))completeBlock onError:(JiveErrorBlock)errorBlock;
 //! https://developers.jivesoftware.com/api/v3/rest/ImageService.html#uploadImage(MultipartBody)
 - (void) uploadImage:(UIImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/ImageService.html#uploadImage(MultipartBody)
+- (void)uploadJPEGImage:(UIImage *)image onComplete:(void (^)(JiveImage *))complete onError:(JiveErrorBlock) errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/ImageService.html#uploadImage(MultipartBody)
+- (void)uploadPNGImage:(UIImage *)image onComplete:(void (^)(JiveImage *))complete onError:(JiveErrorBlock) errorBlock;
 
 //! https://developers.jivesoftware.com/api/v3/rest/ImageService.html#getContentImages(String,%20String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *)imagesOperationFromURL:(NSURL *)imagesURL onComplete:(void (^)(NSArray *))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/ImageService.html#uploadImage(MultipartBody)
-- (AFHTTPRequestOperation<JiveRetryingOperation> *) uploadImageOperation:(UIImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock;
+- (AFHTTPRequestOperation<JiveRetryingOperation> *)uploadImageOperation:(UIImage*) image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/ImageService.html#uploadImage(MultipartBody)
+- (AFHTTPRequestOperation<JiveRetryingOperation> *)uploadJPEGImageOperation:(UIImage *)image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/ImageService.html#uploadImage(MultipartBody)
+- (AFHTTPRequestOperation<JiveRetryingOperation> *)uploadPNGImageOperation:(UIImage *)image onComplete:(void (^)(JiveImage*))complete onError:(JiveErrorBlock) errorBlock;
 
 - (AFImageRequestOperation<JiveRetryingOperation> *)imageRequestOperationWithMutableURLRequest:(NSMutableURLRequest *)imageMutableURLRequest onComplete:(void (^)(UIImage *))complete onError:(JiveErrorBlock)errorBlock;
 
 #pragma mark - Outcomes
-//! No official documnetation yet.
+//! No official documentation yet.
 - (AFJSONRequestOperation<JiveRetryingOperation> *) outcomesListOperation:(JiveContent *)content withOptions:(NSObject<JiveRequestOptions>*)options onComplete:(void (^)(NSArray *))complete onError:(JiveErrorBlock)error;
-//! No official documnetation yet.
+//! No official documentation yet.
 - (AFJSONRequestOperation<JiveRetryingOperation> *) outcomesOperation:(JiveContent *)content withOptions:(JiveOutcomeRequestOptions *)options onComplete:(void (^)(NSArray *outcomes))complete onError:(JiveErrorBlock) error;
-//! No official documnetation yet.
+//! No official documentation yet.
 - (void) outcomes:(JiveContent *)content withOptions:(JiveOutcomeRequestOptions *)options onComplete:(void (^)(NSArray *outcomes))complete onError:(JiveErrorBlock) error;
-//! No official documnetation yet.
+//! No official documentation yet.
 - (AFJSONRequestOperation<JiveRetryingOperation> *) deleteOutcomeOperation:(JiveOutcome *)outcome onComplete:(void (^)(void))complete onError:(JiveErrorBlock)error;
 - (void) deleteOutcome:(JiveOutcome *)outcome onComplete:(void (^)(void))complete onError:(JiveErrorBlock)error;
-//! No official documnetation yet.
+//! No official documentation yet.
 - (AFJSONRequestOperation<JiveRetryingOperation> *) createOutcomeOperation:(JiveOutcome *)outcome forContent:(JiveContent *)content onComplete:(void (^)(JiveOutcome *))complete onError:(JiveErrorBlock)error;
 //! No official documentation yet.
 - (void) createOutcome:(JiveOutcome *)outcome forContent:(JiveContent *)content onComplete:(void (^)(JiveOutcome *))complete onError:(JiveErrorBlock)error;
+//! No official documentation yet.
+- (AFJSONRequestOperation<JiveRetryingOperation> *) outcomeRootContentOperation:(JiveOutcome *)outcome onComplete:(JiveContentCompleteBlock)complete onError:(JiveErrorBlock)error;
+//! No official documentation yet.
+- (void) outcome:(JiveOutcome *) outcome rootContentWithCompleteBlock:(void(^)(JiveContent *rootContent))completeBlock errorBlock:(JiveErrorBlock)errorBlock;
 
 #pragma mark - Properties
 //! https://developers.jivesoftware.com/api/v3/rest/PropertiesMetadataService.html#getPropertyMetadata(String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *) propertyWithNameOperation:(NSString *)propertyName onComplete:(void (^)(JiveProperty *))complete onError:(JiveErrorBlock)error;
 //! https://developers.jivesoftware.com/api/v3/rest/PropertiesMetadataService.html#getPropertyMetadata(String)
 - (void) propertyWithName:(NSString *)propertyName onComplete:(void (^)(JiveProperty *))complete onError:(JiveErrorBlock)error;
+
+#pragma mark - Public Properties (no authentication required)
+
+//! No official documentation
+- (void) publicPropertyWithName:(NSString *)propertyName onComplete:(void (^)(JiveProperty *))complete onError:(JiveErrorBlock)error;
+//! No official documentation
+- (AFJSONRequestOperation<JiveRetryingOperation> *) publicPropertyWithNameOperation:(NSString *)propertyName onComplete:(void (^)(JiveProperty *))complete onError:(JiveErrorBlock)error;
+//! No official documentation
+- (AFJSONRequestOperation<JiveRetryingOperation> *) publicPropertiesListOperationWithOnComplete:(void (^)(NSArray *))complete onError:(JiveErrorBlock)error;
+//! No official documentation
+- (void) publicPropertiesListWithOnComplete:(void (^)(NSArray *))complete onError:(JiveErrorBlock)error;
+
+#pragma mark - Add-On Properties
+//! Returns an operation testing whether a property associated with an add-on is true or false
+- (AFJSONRequestOperation<JiveRetryingOperation>*)testBooleanAddOnPropertyOperationForName:(NSString*)propertyName forAddOnUUID:(NSString*)uuid onComplete:(void (^)(BOOL))complete onError:(JiveErrorBlock)error;
+//! Returns an operation testing whether a property associated with an add-on is true or false
+- (void)testBooleanAddOnPropertyForName:(NSString*)propertyName forAddOnUUID:(NSString*)uuid onComplete:(void (^)(BOOL))complete onError:(JiveErrorBlock)error;
+
 
 #pragma mark - Objects
 //! https://developers.jivesoftware.com/api/v3/rest/ObjectMetadataService.html#getObjectTypes(UriInfo)
@@ -681,7 +767,35 @@ typedef void (^JiveBadRequestLoggerBlock)(NSString *message, Jive *jive, NSURLRe
 - (AFJSONRequestOperation<JiveRetryingOperation> *)pushRegistrationInfoForDevice:(NSString *)deviceToken onComplete:(JiveArrayCompleteBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
 //! No official documnetation yet.
 - (AFJSONRequestOperation<JiveRetryingOperation> *)unRegisterDeviceForJivePushNotifications:(NSString *)deviceToken onComplete:(JiveCompletedBlock)completeBlock onError:(JiveErrorBlock)errorBlock;
+
+#pragma mark - OAuth
+//! Returns an operation to retrieve an OAuth credential pair from the Jive host using the Resource Owner Password Credentials grant type.
+-(AFJSONRequestOperation*)OAuthTokenOperationWithOAuthID:(NSString*)oauthID OAuthSecret:(NSString*)oauthSecret username:(NSString*)username password:(NSString*)password onComplete:(void(^)(JiveOAuthCredentials*))completeBlock onError:(JiveErrorBlock)errorBlock;
+//! Retrieves an OAuth credential pair from the Jive host using the Resource Owner Password Credentials grant type.
+-(void)OAuthTokenWithOAuthID:(NSString*)oauthID OAuthSecret:(NSString*)oauthSecret username:(NSString*)username password:(NSString*)password onComplete:(void(^)(JiveOAuthCredentials*))completeBlock onError:(JiveErrorBlock)errorBlock;
+//! Returns an operation to retrieve an OAuth credential pair from the Jive host using session grant type.
+-(AFJSONRequestOperation*)OAuthTokenOperationWithOAuthID:(NSString*)oauthID OAuthSecret:(NSString*)oauthSecret onComplete:(void(^)(JiveOAuthCredentials*))completeBlock onError:(JiveErrorBlock)errorBlock;
+//! Retrieves an OAuth credential pair from the Jive host using the session grant type.
+-(void)OAuthTokenWithOAuthID:(NSString*)oauthID OAuthSecret:(NSString*)oauthSecret onComplete:(void(^)(JiveOAuthCredentials*))completeBlock onError:(JiveErrorBlock)errorBlock;
+//! Given a refresh token, returns an operation which retrieves a fresh OAuth credential pair.
+-(AFJSONRequestOperation*)OAuthTokenRefreshOperationWithOAuthID:(NSString*)oauthID OAuthSecret:(NSString*)oauthSecret refreshToken:(NSString*)refreshToken onComplete:(void(^)(JiveOAuthCredentials*))completeBlock onError:(JiveErrorBlock)errorBlock;
+//! Given a refresh token, retrieves a fresh OAuth credential pair.
+-(void)OAuthTokenRefreshWithOAuthID:(NSString*)oauthID OAuthSecret:(NSString*)oauthSecret refreshToken:(NSString*)refreshToken onComplete:(void(^)(JiveOAuthCredentials*))completeBlock onError:(JiveErrorBlock)errorBlock;
+
+//! Given an OAuth credential pair, return an operation that requests its revocation.
+- (AFJSONRequestOperation<JiveRetryingOperation> *)OAuthRevocationOperationWithOAuthCredentials:(JiveOAuthCredentials*)credentials onComplete:(void(^)(void))completeBlock onError:(JiveErrorBlock)errorBlock;
+//! Given an OAuth credential pair, request its revocation.
+-(void)OAuthRevocationWithOAuthCredentials:(JiveOAuthCredentials*)credentials onComplete:(void(^)(void))completeBlock onError:(JiveErrorBlock)errorBlock;
+
+#pragma mark - Jive Tour
+//! Returns an operation that completes the mobile quest on the "Getting Started" tour.
+-(AFJSONRequestOperation*)mobileQuestCompletionOperationWithOnComplete:(void(^)(void))completeBlock onError:(JiveErrorBlock)errorBlock;
+//! Completes the mobile quest on the "Getting Started" tour.
+-(void)mobileQuestCompletionWithOnComplete:(void(^)(void))completeBlock onError:(JiveErrorBlock)errorBlock;
+
+
 @end
+
 
 //! \class JiveAuthorizationDelegate
 @protocol JiveAuthorizationDelegate <NSObject>

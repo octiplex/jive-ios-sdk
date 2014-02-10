@@ -45,6 +45,8 @@ extern struct JivePersonAttributes {
     __unsafe_unretained NSString *updated;
 } const JivePersonAttributes;
 
+extern NSString * const JivePersonGuestID;
+
 
 //! \class JivePerson
 //! https://developers.jivesoftware.com/api/v3/rest/PersonEntity.html
@@ -169,6 +171,12 @@ extern struct JivePersonAttributes {
 - (void) follow:(JivePerson *)target
      onComplete:(JiveCompletedBlock)completeBlock
         onError:(JiveErrorBlock)error;
+
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#deleteFollowing(String,%20String)
+- (void) unFollow:(JivePerson *)target
+     onComplete:(JiveCompletedBlock)completeBlock
+        onError:(JiveErrorBlock)error;
+
 //! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#setFollowingIn(String,%20String,%20String)
 - (void) updateFollowingIn:(NSArray *)followingInStreams //! JiveStream[]
                withOptions:(JiveReturnFieldsRequestOptions *)options
@@ -180,6 +188,13 @@ extern struct JivePersonAttributes {
         withOptions:(JiveReturnFieldsRequestOptions *)options
          onComplete:(JiveTaskCompleteBlock)completeBlock
             onError:(JiveErrorBlock)errorBlock;
+
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#getTermsAndConditions(String)
+- (void) termsAndConditions:(JiveTermsAndConditionsCompleteBlock)completeBlock
+                    onError:(JiveErrorBlock)errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#acceptTermsAndConditions(String)
+- (void) acceptTermsAndConditions:(JiveCompletedBlock)completeBlock
+                          onError:(JiveErrorBlock)errorBlock;
 
 //! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#getPerson(String,%20String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *) refreshOperationWithOptions:(JiveReturnFieldsRequestOptions *)options
@@ -250,11 +265,23 @@ extern struct JivePersonAttributes {
                                                                    onComplete:(JiveArrayCompleteBlock)completeBlock //! JiveStream[]
                                                                       onError:(JiveErrorBlock)error;
 
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#deleteFollowing(String,%20String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) unFollowOperation:(JivePerson *)target
+                                                           onComplete:(JiveCompletedBlock)completeBlock
+                                                              onError:(JiveErrorBlock)errorBlock;
+
 //! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#createTask(String,%20String,%20String)
 - (AFJSONRequestOperation<JiveRetryingOperation> *) createTaskOperation:(JiveTask *)task
                                                             withOptions:(JiveReturnFieldsRequestOptions *)options
                                                              onComplete:(JiveTaskCompleteBlock)completeBlock
                                                                 onError:(JiveErrorBlock)errorBlock;
+
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#getTermsAndConditions(String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) termsAndConditionsOperation:(JiveTermsAndConditionsCompleteBlock)completeBlock
+                                                                        onError:(JiveErrorBlock)errorBlock;
+//! https://developers.jivesoftware.com/api/v3/rest/PersonService.html#acceptTermsAndConditions(String)
+- (AFJSONRequestOperation<JiveRetryingOperation> *) acceptTermsAndConditionsOperation:(JiveCompletedBlock)completeBlock
+                                                                              onError:(JiveErrorBlock)errorBlock;
 
 - (NSURL *)avatarRef;
 - (NSURL *)activityRef;
@@ -275,6 +302,8 @@ extern struct JivePersonAttributes {
 - (BOOL)canCreateNewStream;
 - (NSURL *)tasksRef;
 - (BOOL)canCreateNewTask;
+
+- (BOOL)isGuest;
 
 @property (strong, nonatomic) Jive *jiveInstance;
 

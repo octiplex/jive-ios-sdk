@@ -23,6 +23,7 @@ extern struct JivePropertyTypes {
     __unsafe_unretained NSString *boolean;
     __unsafe_unretained NSString *string;
     __unsafe_unretained NSString *number;
+    __unsafe_unretained NSString *integer;
 } const JivePropertyTypes;
 
 extern struct JivePropertyAttributes {
@@ -34,6 +35,22 @@ extern struct JivePropertyAttributes {
     __unsafe_unretained NSString *type;
     __unsafe_unretained NSString *value;
 } const JivePropertyAttributes;
+
+extern struct JivePropertyNames {
+    __unsafe_unretained NSString *instanceURL;
+    __unsafe_unretained NSString *statusUpdatesEnabled;
+    __unsafe_unretained NSString *statusUpdateMaxCharacters;
+    __unsafe_unretained NSString *blogsEnabled;
+    __unsafe_unretained NSString *realTimeChatEnabled;
+    __unsafe_unretained NSString *imagesEnabled;
+    __unsafe_unretained NSString *personalStatusUpdatesEnabled;
+    __unsafe_unretained NSString *placeStatusUpdatesEnabled;
+    __unsafe_unretained NSString *repostStatusUpdatesEnabled;
+    __unsafe_unretained NSString *mobileBinaryDownloadsDisabled;
+    __unsafe_unretained NSString *shareEnabled;
+    __unsafe_unretained NSString *maxAttachmentSize;
+    __unsafe_unretained NSString *videoModuleEnabled;
+} const JivePropertyNames;
 
 //! \class JiveProperty
 //! https://developers.jivesoftware.com/api/v3/rest/PropertyEntity.html

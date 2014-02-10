@@ -17,8 +17,10 @@
 //    limitations under the License.
 //
 
-#import <SenTestingKit/SenTestingKit.h>
+#import "JiveObjectTests.h"
 
-@interface JivePlatformVersionTests : SenTestCase
+@interface JivePlatformVersionTests : JiveObjectTests
+
++ (JivePlatformVersion *)jivePlatformVersionWithMajorVersion:(NSUInteger)majorVersion minorVersion:(NSUInteger)minorVersion maintenanceVersion:(NSUInteger)maintenanceVersion;
 
 @end

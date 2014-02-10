@@ -89,26 +89,36 @@ static inline JVSemanticVersion JVSemanticVersionMake(NSUInteger majorVersion,
     }
 }
 
-+ (JivePlatformVersion*) instanceFromJSON:(NSDictionary*) JSON {
-    JivePlatformVersion *instance = [JivePlatformVersion new];
++ (JivePlatformVersion*) objectFromJSON:(NSDictionary*)JSON withInstance:(Jive *)instance {
+    JivePlatformVersion *version = [JivePlatformVersion new];
     NSInteger requiredElementsFound = 0;
     
     for (NSString *key in JSON) {
         if ([JiveVersionKey isEqualToString:key]) {
-            [instance parseVersion:JSON[key]];
+            [version parseVersion:JSON[key]];
             ++requiredElementsFound;
         }
         else if ([JiveCoreVersionsKey isEqualToString:key]) {
-            NSArray *coreURIs = [JiveCoreVersion instancesFromJSONList:JSON[key]];
+            NSArray *coreURIs = [JiveCoreVersion objectsFromJSONList:JSON[key]
+                                                          withInstance:instance];
             
-            [instance setValue:coreURIs forKey:JivePlatformVersionAttributes.coreURI];
+            [version setValue:coreURIs forKey:JivePlatformVersionAttributes.coreURI];
             ++requiredElementsFound;
         }
         else
-            [instance deserializeKey:key fromJSON:JSON];
+            if ([key isEqualToString:@"instanceURL"]) {
+                NSString *instanceURL = JSON[key];
+                if (![instanceURL hasSuffix:@"/"]) {
+                    [version deserializeKey:key fromJSON:@{key:[instanceURL stringByAppendingString:@"/"]} fromInstance:instance];
+                } else {
+                    [version deserializeKey:key fromJSON:JSON fromInstance:instance];
+                }
+            } else {
+                [version deserializeKey:key fromJSON:JSON fromInstance:instance];
+            }
     }
     
-    return requiredElementsFound == 2 ? instance : nil;
+    return requiredElementsFound == 2 ? version : nil;
 }
 
 - (NSString *)sdk {
@@ -212,6 +222,31 @@ static inline JVSemanticVersion JVSemanticVersionMake(NSUInteger majorVersion,
 }
 
 - (BOOL)supportedIPhoneVersion {
+    JVSemanticVersion supportedJiveVersion = JVSemanticVersionMake(6, 0, 3);
+    return [self supportsFeatureAvailableWithSemanticVersion:supportedJiveVersion];
+}
+
+- (BOOL)supportsOAuth {
+    JVSemanticVersion supportedJiveVersion = JVSemanticVersionMake(7, 0, 0);
+    return [self supportsFeatureAvailableWithSemanticVersion:supportedJiveVersion];    
+}
+
+- (BOOL)supportsOAuthSessionGrant {
+    JVSemanticVersion supportedJiveVersion = JVSemanticVersionMake(7, 0, 1);
+    return [self supportsFeatureAvailableWithSemanticVersion:supportedJiveVersion];
+}
+
+- (BOOL)supportsFeatureModuleVideoProperty {
+    JVSemanticVersion supportedJiveVersion = JVSemanticVersionMake(7, 0, 1);
+    return [self supportsFeatureAvailableWithSemanticVersion:supportedJiveVersion];
+}
+
+- (BOOL)supportsContentEditingAPI {
+    JVSemanticVersion supportedJiveVersion = JVSemanticVersionMake(7, 0, 0);
+    return [self supportsFeatureAvailableWithSemanticVersion:supportedJiveVersion];
+}
+
+- (BOOL)supportsLikeCountInStreams {
     JVSemanticVersion supportedJiveVersion = JVSemanticVersionMake(6, 0, 3);
     return [self supportsFeatureAvailableWithSemanticVersion:supportedJiveVersion];
 }

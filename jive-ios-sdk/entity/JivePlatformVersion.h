@@ -75,5 +75,10 @@ extern struct JivePlatformVersionAttributes {
 - (BOOL)supportsInboxTypeFiltering;
 - (BOOL)supportsCommentAndReplyPermissions;
 - (BOOL)supportedIPhoneVersion;
+- (BOOL)supportsOAuth;
+- (BOOL)supportsOAuthSessionGrant;
+- (BOOL)supportsFeatureModuleVideoProperty;
+- (BOOL)supportsContentEditingAPI;
+- (BOOL)supportsLikeCountInStreams;
 
 @end
