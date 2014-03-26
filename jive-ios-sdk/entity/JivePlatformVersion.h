@@ -71,6 +71,7 @@ extern struct JivePlatformVersionAttributes {
 - (BOOL)supportsCorrectAndHelpfulReplies;
 - (BOOL)supportsStructuredOutcomes;
 - (BOOL)supportsExplicitCorrectAnswerAPI;
+- (BOOL)supportsUnmarkAsCorrectAnswer;
 - (BOOL)supportsDiscussionLikesInActivityObjects;
 - (BOOL)supportsInboxTypeFiltering;
 - (BOOL)supportsCommentAndReplyPermissions;
@@ -80,5 +81,6 @@ extern struct JivePlatformVersionAttributes {
 - (BOOL)supportsFeatureModuleVideoProperty;
 - (BOOL)supportsContentEditingAPI;
 - (BOOL)supportsLikeCountInStreams;
+- (BOOL)supportsNativeAppAllowed;
 
 @end
